@@ -12,3 +12,6 @@ dependencies = [
     "plotly>=6.6.0",
     "scikit-learn>=1.8.0",
 ]
+
+[project.scripts]
+dev = "mlhw7_marimo:main"
