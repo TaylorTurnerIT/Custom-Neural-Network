@@ -1,0 +1,229 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.21.1",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "6203b284d21b0417149f8eac1618c1be",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"machine-learning-assignment-7\">Machine Learning Assignment 7</h1>\n<h2 id=\"logistic-regression-from-scratch-a-single-neuron-with-modular-backpropagation\">Logistic Regression from Scratch: A Single Neuron with Modular Backpropagation</h2>\n<span class=\"paragraph\">This notebook is intentionally a scaffold so you can complete the assignment yourself.</span>\n<span class=\"paragraph\">What is included:</span>\n<ul>\n<li>marimo notebook structure</li>\n<li>the exact dataset-loading block from the assignment</li>\n<li>the exact <code>Neuron</code> class skeleton from the assignment</li>\n<li>TODO placeholders for the remaining work</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "2f3e8b13a69a52bbc1e7b78df617bdaa",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "249601ccd5b3d8c2b80176b666ba8f76",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-1a-written-questions-where-does-cross-entropy-come-from\">Part 1a \u2014 Written Questions: Where Does Cross-Entropy Come From?</h2>\n<span class=\"paragraph\">Add your written answers in markdown cells below this section.</span>\n<ol>\n<li>Explain what the product-form probability expression computes.</li>\n<li>Take the log and simplify it.</li>\n<li>Explain why optimizing the product directly is problematic.</li>\n<li>Convert the log-likelihood into a loss for minimization.</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "81fa04da4eb8436003a031fb4092fe9d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "83593ea46e0d27f440502de9f0c2ca77",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "3bb4b16fe623501d139f6320df45b9d8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-1b-implement-the-neuron-class\">Part 1b \u2014 Implement the Neuron Class</h2>\n<span class=\"paragraph\">Complete the following class skeleton exactly. Do not change any method signature.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "99f5596c43024fb5e072652d4e376709",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "35bf1bda1ccfa59d068c19767d1c19cb",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-2-training-loop\">Part 2 \u2014 Training Loop</h2>\n<span class=\"paragraph\">Write a training loop that:</span>\n<ul>\n<li>splits data into train / validation / test using <code>random_seed = 42</code></li>\n<li>normalizes with <code>MinMaxScaler</code> fit on the training set only</li>\n<li>instantiates <code>Neuron</code></li>\n<li>computes BCE loss and <code>dL/dP_hat</code> in the training loop</li>\n<li>calls <code>backward(dL_dP_hat, lr)</code></li>\n<li>records training and validation loss each epoch</li>\n</ul>\n<span class=\"paragraph\">Mathematical background:</span>\n<ul>\n<li><code>Z = X @ W.T + b</code></li>\n<li><code>P_hat = sigmoid(Z)</code></li>\n<li><code>L = -(1/N) * sum( y*log(P_hat) + (1-y)*log(1-P_hat) )</code></li>\n<li><code>dL/dP_hat = -(y/P_hat) + (1-y)/(1-P_hat)</code></li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "9f6db18fe6b28123e1e684d456c60b1a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "d47314bf101f80d13dd8b1d376c82e28",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-3a-overfitting-diagnostics\">Part 3a \u2014 Overfitting Diagnostics</h2>\n<span class=\"paragraph\">Plot training loss and validation loss on the same axes vs. epoch.\nThen add your 3\u20135 sentence interpretation in a markdown cell below.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "37c1e2cb1837d77c0b260bf3df383402",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "41e3e35629c09e06349a76f135d36e6a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "15f8132062657335fb7c9eabc2fb505b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-3b-confusion-matrix-and-per-class-metrics\">Part 3b \u2014 Confusion Matrix and Per-Class Metrics</h2>\n<span class=\"paragraph\">Using your trained model's predictions on the test set:</span>\n<ul>\n<li>compute and display the confusion matrix</li>\n<li>report precision and recall for the gamma class</li>\n<li>report precision and recall for the hadron class</li>\n<li>add your 2\u20133 sentence interpretation below</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "ad1a5e1b2190c7b6889b8b6801983534",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "f0bd5247b262f25c9b1c3d8b90034aee",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "7a0cac99abd9d3798a5827a5c7851e63",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-3c-synthesis\">Part 3c \u2014 Synthesis</h2>\n<span class=\"paragraph\">Add your 4\u20136 sentence synthesis paragraph below this section.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "4fdbeb4def157da927ca0422c5544d0c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "d75d9a5b2014502fdd30fe5c2bd7feda",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"part-4-polynomial-features\">Part 4 \u2014 Polynomial Features</h2>\n<span class=\"paragraph\">Using degree-2 polynomial features:</span>\n<ul>\n<li>generate polynomial features from the original 10 features</li>\n<li>apply the same 70 / 15 / 15 split and scaling protocol</li>\n<li>retrain your <code>Neuron</code></li>\n<li>plot the polynomial model loss curves</li>\n<li>report accuracy, precision, recall, and F1</li>\n<li>compare against the baseline model</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "0cc4d7d2f9fea72b6d8952f67ac89839",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "ade7cfcbcaf7c88f33aa778f19b7cb8a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "5a353add6815d9cacc2753a771b68144",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "32c3d66da37856589a4aa1d804831ff0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"going-beyond-l2-regularization-with-weight-decay\">Going Beyond \u2014 L2 Regularization with Weight Decay</h2>\n<span class=\"paragraph\">Only complete this section if you need the 5xxx requirement or bonus work.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "e660ea0746983d7b56ad0198d4e502f4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "cf18109d88f9368911d3bf6ee8645c80",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"submission-reminder\">Submission Reminder</h2>\n<span class=\"paragraph\">Before exporting to PDF, make sure the notebook contains:</span>\n<ul>\n<li>your written answers</li>\n<li>your completed code</li>\n<li>your plots</li>\n<li>your tables</li>\n<li>your interpretations directly below the relevant outputs</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

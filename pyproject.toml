@@ -1,0 +1,14 @@
+[project]
+name = "mlhw7"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "marimo>=0.21.1",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.4",
+    "pandas>=3.0.1",
+    "plotly>=6.6.0",
+    "scikit-learn>=1.8.0",
+]
