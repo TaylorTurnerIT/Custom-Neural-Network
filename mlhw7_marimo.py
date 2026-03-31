@@ -1,7 +1,11 @@
 import marimo
 
 __generated_with = "0.21.1"
-app = marimo.App(width="wide")
+app = marimo.App(
+    width="medium",
+    app_title="Machine Learning — Programming Assignment 7",
+    auto_download=["html", "ipynb"],
+)
 
 
 @app.cell
@@ -99,9 +103,9 @@ def _(mo):
 
 @app.cell
 def _():
-    learning_rate  = 0.1
-    epochs         = 1000
-    random_seed    = 42
+    learning_rate = 0.1
+    epochs = 1000
+    random_seed = 42
     return
 
 
@@ -128,28 +132,51 @@ def _():
     import seaborn as sns
 
     np.random.seed(42)
-    sns.set_style('whitegrid')
-    plt.rcParams['figure.figsize'] = (10, 6)
+    sns.set_style("whitegrid")
+    plt.rcParams["figure.figsize"] = (10, 6)
 
     # ── Load MAGIC Gamma Telescope Dataset ──────────────────────────────────
-    url = ('https://archive.ics.uci.edu/ml/machine-learning-databases'
-           '/magic/magic04.data')
+    url = (
+        "https://archive.ics.uci.edu/ml/machine-learning-databases"
+        "/magic/magic04.data"
+    )
 
-    col_names = ['fLength','fWidth','fSize','fConc','fConc1',
-                 'fAsym','fM3Long','fM3Trans','fAlpha','fDist','class']
+    col_names = [
+        "fLength",
+        "fWidth",
+        "fSize",
+        "fConc",
+        "fConc1",
+        "fAsym",
+        "fM3Long",
+        "fM3Trans",
+        "fAlpha",
+        "fDist",
+        "class",
+    ]
     df = pd.read_csv(url, names=col_names)
 
     # Binary encode: gamma (signal) = 1, hadron (background) = 0
-    df['label'] = (df['class'] == 'g').astype(int)
+    df["label"] = (df["class"] == "g").astype(int)
 
-    features = ['fLength','fWidth','fSize','fConc','fConc1',
-                'fAsym','fM3Long','fM3Trans','fAlpha','fDist']
+    features = [
+        "fLength",
+        "fWidth",
+        "fSize",
+        "fConc",
+        "fConc1",
+        "fAsym",
+        "fM3Long",
+        "fM3Trans",
+        "fAlpha",
+        "fDist",
+    ]
 
-    X = df[features].values          # shape (19020, 10)
-    y = df['label'].values.reshape(-1, 1)  # shape (19020, 1)
+    X = df[features].values  # shape (19020, 10)
+    y = df["label"].values.reshape(-1, 1)  # shape (19020, 1)
 
-    print(f'Dataset shape: X={X.shape}, y={y.shape}')
-    print(f'Class balance: {y.mean():.3f} gamma, {1-y.mean():.3f} hadron')
+    print(f"Dataset shape: X={X.shape}, y={y.shape}")
+    print(f"Class balance: {y.mean():.3f} gamma, {1 - y.mean():.3f} hadron")
     return MinMaxScaler, PolynomialFeatures, np
 
 
@@ -254,7 +281,6 @@ def _(np):
             """
             # TODO
             pass
-
 
     return
 
