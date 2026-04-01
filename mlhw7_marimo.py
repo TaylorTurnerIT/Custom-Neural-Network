@@ -180,7 +180,7 @@ def _():
 
     print(f"Dataset shape: X={X.shape}, y={y.shape}")
     print(f"Class balance: {y.mean():.3f} gamma, {1 - y.mean():.3f} hadron")
-    return MinMaxScaler, PolynomialFeatures, np
+    return MinMaxScaler, PolynomialFeatures, X, np, train_test_split, y
 
 
 @app.cell(hide_code=True)
@@ -205,7 +205,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Write your answers to Part 1a here:**
@@ -237,20 +237,20 @@ def _(mo):
     return
 
 
-app._unparsable_cell(
-    """
+@app.cell
+def _(n_samples, np):
     class Neuron:
         def __init__(self, n_features: int):
-            \"\"\"
+            """
             Initialize weights and bias.
             W : np.ndarray, shape (1, n_features)  small random values
             b : float, initialized to 0
-            \"\"\"
+            """
             self.W = np.random.uniform(-0.01, 0.01, (1, n_features))
             self.b: float = 0.0
 
         def forward(self, X: np.ndarray) -> np.ndarray:
-            \"\"\"
+            """
             Compute the forward pass.
 
             Parameters
@@ -265,18 +265,18 @@ app._unparsable_cell(
             Notes
             -----
             Cache X and P_hat on self for use in backward().
-            \"\"\"
+            """
             self.X = X
             self.P_hat: np.ndarray = np.zeros(n_samples, 1)
             self.Y_hat: np.ndarray = np.zeros(n_samples, 1)
 
-            self.Y_hat = X@np.transpose(self.W)+self.b
+            self.Y_hat = X @ np.transpose(self.W) + self.b
 
-            self.P_hat = 1 / (1 + np.e np.exp(-X))
+            self.P_hat = 1 / (1 + np.exp(-X))
             return self.P_hat
 
         def backward(self, dL_dP_hat: np.ndarray, lr: float):
-            \"\"\"
+            """
             Backpropagate the upstream gradient through this neuron.
             Update W and b in-place.
 
@@ -297,13 +297,12 @@ app._unparsable_cell(
             -----
             This method must not reference y or compute any loss value.
             It receives a gradient and updates the weights — that is all.
-            \"\"\"
+            """
 
             self.W = self.W - (lr * dL_dP_hat)
             return
-    """,
-    name="_"
-)
+
+    return (Neuron,)
 
 
 @app.cell(hide_code=True)
@@ -352,15 +351,37 @@ def _(mo):
 
 
 @app.cell
-def _(Neuron, np):
+def _(MinMaxScaler, Neuron, X, train_test_split, y):
+    # random_seed = 42
+
+    # X = df[features].values                # shape (19020, 10)
+    # y = df["label"].values.reshape(-1, 1)  # shape (19020, 1)
+
+
     # TODO: Split data into train / validation / test with 70 / 15 / 15.
-    np.split()
+    # Step 1: Split off the training set (70% train, 30% temp)
+
+    train_X, temp_X = train_test_split(X, test_size=0.30, random_state=42)
+
+    # Step 2: Split the temp data in half (50% of 30% = 15% overall for each)
+    val_data, test_data = train_test_split(temp_X, test_size=0.50, random_state=42)
+
+    print(f"Total data: {len(X)}")
+    print(f"Training set: {len(train_X)} (70%)")
+    print(f"Validation set: {len(val_data)} (15%)")
+    print(f"Test set: {len(test_data)} (15%)")
+
+
     # TODO: Fit MinMaxScaler on the training data only.
+    scaler = MinMaxScaler()
+    scaled_train_X = scaler.fit_transform(train_X)
+    print(scaled_train_X[1])
 
     # TODO: Transform training, validation, and test features.
 
+
     # TODO: Instantiate your Neuron.
-    neuron = Neuron(19020)
+    neuron = Neuron(n_features=len(y))
     # TODO: Create lists to store training and validation loss.
 
     # TODO: Write the epoch loop.
@@ -371,8 +392,6 @@ def _(Neuron, np):
     #   - Call backward(dL_dP_hat, learning_rate).
     #   - Forward pass on validation data to record validation loss.
     #   - Record training loss and validation loss.
-
-    pass
     return
 
 
