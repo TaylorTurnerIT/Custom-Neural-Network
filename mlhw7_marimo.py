@@ -21,6 +21,9 @@ def _(mo):
     # Machine Learning — Programming Assignment 7
     **Logistic Regression from Scratch: A Single Neuron with Modular Backpropagation**
 
+    obligatory aerial tramway
+    #🚡
+
     | Requirement | Details |
     | :--- | :--- |
     | **Points (4xxx)** | 120 pts (+20 bonus) |
@@ -207,10 +210,20 @@ def _(mo):
     mo.md(r"""
     **Write your answers to Part 1a here:**
 
-    1.
-    2.
-    3.
-    4.
+    1. This formula is showing the liklihood of observing the correct result. Since we're dealing with probabilities, we aren't necessarily saying "right" or "wrong." Instead, we say how right or how wrong we were in probabilities. This formula captures the relationship by returning the `p_hat` values accuracy. For example, `phat = 0.8` indicates 80% confidence in the represented element being a particular result (such as DOG). Given that DOG is correct, `p = 1` (100% confidence DOG). This formula looks like:
+    $$0.8^1*(1-0.8)^{(1-1)} = 0.8$$
+    and if p = 0 (100% confidence not DOG)
+    $$0.8^0(1-0.8)^{(1-0)} = 0.2$$
+    If the formula returns a higher value, it means the model's predicted probability was closer to the actual outcome. Conversely, lower values indicate a larger discrepancy between prediction and reality. This allows us to quantify the model's performance in terms of probability rather than just binary correctness.
+
+    2. When we log it, we transform the product into a summation and bring the exponents down.
+    $$ \prod_{i=1}^{n} \hat{p}_i^{p_i} (1 - \hat{p}_i)^{(1 - p_i)} $$
+    $$ -> $$
+    $$ \sum_{i=1}^{n} {p_i}*log(\hat{p}_i)+(1 - p_i)*log(1 - \hat{p}_i) $$
+
+    3. Multiplicaiton can naturally cause explosive growth, we cannot allow this lest we perish in the depths of the 64-bit integer limit. The log applies a change to addition and allows us to grow significantly slower.
+
+    4. Apply a `1 - ` to the entire formula and it becomes minimizaiton instead of maximization.
     """)
     return
 
@@ -224,20 +237,20 @@ def _(mo):
     return
 
 
-@app.cell
-def _(np):
+app._unparsable_cell(
+    """
     class Neuron:
         def __init__(self, n_features: int):
-            """
+            \"\"\"
             Initialize weights and bias.
             W : np.ndarray, shape (1, n_features)  small random values
             b : float, initialized to 0
-            """
-            # TODO
-            pass
+            \"\"\"
+            self.W = np.random.uniform(-0.01, 0.01, (1, n_features))
+            self.b: float = 0.0
 
         def forward(self, X: np.ndarray) -> np.ndarray:
-            """
+            \"\"\"
             Compute the forward pass.
 
             Parameters
@@ -252,12 +265,17 @@ def _(np):
             Notes
             -----
             Cache X and P_hat on self for use in backward().
-            """
-            # TODO
-            pass
+            \"\"\"
+            self.X = X
+            self.P_hat: np.ndarray = np.zeros(n_samples, 1)
+            self.Y_hat: np.ndarray = np.zeros(n_samples, 1)
+
+            self.Y_hat = X@np.transpose(self.W)+self.b
+        
+            return self.P_hat = 1 / (1 + np.e np.exp(-X))
 
         def backward(self, dL_dP_hat: np.ndarray, lr: float):
-            """
+            \"\"\"
             Backpropagate the upstream gradient through this neuron.
             Update W and b in-place.
 
@@ -278,11 +296,13 @@ def _(np):
             -----
             This method must not reference y or compute any loss value.
             It receives a gradient and updates the weights — that is all.
-            """
-            # TODO
-            pass
+            \"\"\"
 
-    return
+            self.W = self.W - (lr * dL_dP_hat)
+            return
+    """,
+    name="_"
+)
 
 
 @app.cell(hide_code=True)
@@ -331,15 +351,15 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(Neuron, np):
     # TODO: Split data into train / validation / test with 70 / 15 / 15.
-
+    np.split()
     # TODO: Fit MinMaxScaler on the training data only.
 
     # TODO: Transform training, validation, and test features.
 
     # TODO: Instantiate your Neuron.
-
+    neuron = Neuron(19020)
     # TODO: Create lists to store training and validation loss.
 
     # TODO: Write the epoch loop.
