@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.21.1"
+__generated_with = "0.22.0"
 app = marimo.App(
     width="medium",
     app_title="Machine Learning — Programming Assignment 7",
@@ -271,8 +271,9 @@ app._unparsable_cell(
             self.Y_hat: np.ndarray = np.zeros(n_samples, 1)
 
             self.Y_hat = X@np.transpose(self.W)+self.b
-        
-            return self.P_hat = 1 / (1 + np.e np.exp(-X))
+
+            self.P_hat = 1 / (1 + np.e np.exp(-X))
+            return self.P_hat
 
         def backward(self, dL_dP_hat: np.ndarray, lr: float):
             \"\"\"
