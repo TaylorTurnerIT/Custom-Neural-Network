@@ -246,7 +246,7 @@ def _(np):
             W : np.ndarray, shape (1, n_features)  small random values
             b : float, initialized to 0
             """
-            self.W = np.random.uniform(-1, 1, (1, n_features))  # "small?"
+            self.W = np.random.randn(1, n_features) * 0.01
             self.b: float = 0.0
 
         def forward(self, X: np.ndarray) -> np.ndarray:
@@ -537,6 +537,8 @@ def _(mo):
     mo.md(r"""
     **Part 3a Interpretation (3-5 sentences):**
     We're seeing outstanding performance out of the model given its nature as a logistic regression engine. In our experiments, we pushed the epochs to 50,000 and it never overfit because the model does not have the capacity to overfit. By definition, we are underfit on the data. The question implies there is overfitting but by the nature of the problem it doesn't make sense that we would.
+
+    Regularizaiton wouldn't substantially affect the setup since we've got no overfitting to fix.
     """)
     return
 
