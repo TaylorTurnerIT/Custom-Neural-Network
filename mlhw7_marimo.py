@@ -713,11 +713,21 @@ def _(MinMaxScaler, PolynomialFeatures, X_test, X_train, X_validation):
     X_train_poly = scaler_poly.fit_transform(X_train_poly)
     X_val_poly = scaler_poly.transform(X_val_poly)
     X_test_poly = scaler_poly.transform(X_test_poly)
-    return X_train_poly, X_val_poly, X_test_poly
+    return X_test_poly, X_train_poly, X_val_poly
 
 
 @app.cell
-def _(Neuron, X_test_poly, X_train_poly, X_val_poly, epochs, learning_rate, np, y_test, y_train, y_validation):
+def _(
+    Neuron,
+    X_test_poly,
+    X_train_poly,
+    X_val_poly,
+    epochs,
+    learning_rate,
+    np,
+    y_train,
+    y_validation,
+):
     # Instantiate a fresh Neuron on the expanded feature set.
     POLY_FEATURE_COUNT = X_train_poly.shape[1]
     neuron_poly = Neuron(n_features=POLY_FEATURE_COUNT)
@@ -732,38 +742,38 @@ def _(Neuron, X_test_poly, X_train_poly, X_val_poly, epochs, learning_rate, np, 
     )
     print("=" * 80)
 
-    for epoch in range(epochs):
+    for poly_epoch in range(epochs):
         neuron_poly.forward(X_train_poly)
         neuron_poly.P_hat = np.clip(neuron_poly.P_hat, 1e-9, 1 - 1e-9)
 
-        N = X_train_poly.shape[0]
-        L = -(1 / N) * np.sum(
+        poly_N = X_train_poly.shape[0]
+        poly_L = -(1 / poly_N) * np.sum(
             y_train * np.log(neuron_poly.P_hat)
             + (1 - y_train) * np.log(1 - neuron_poly.P_hat)
         )
 
-        dL_dP_hat = -(y_train / neuron_poly.P_hat) + (1 - y_train) / (
+        poly_dL_dP_hat = -(y_train / neuron_poly.P_hat) + (1 - y_train) / (
             1 - neuron_poly.P_hat
         )
 
-        neuron_poly.backward(dL_dP_hat, learning_rate)
-        training_loss_poly.append(L)
+        neuron_poly.backward(poly_dL_dP_hat, learning_rate)
+        training_loss_poly.append(poly_L)
 
         neuron_poly.forward(X_val_poly)
-        P_hat_val = np.clip(neuron_poly.P_hat, 1e-9, 1 - 1e-9)
-        N_val = X_val_poly.shape[0]
-        L_val = -(1 / N_val) * np.sum(
-            y_validation * np.log(P_hat_val)
-            + (1 - y_validation) * np.log(1 - P_hat_val)
+        poly_P_hat_val = np.clip(neuron_poly.P_hat, 1e-9, 1 - 1e-9)
+        poly_N_val = X_val_poly.shape[0]
+        poly_L_val = -(1 / poly_N_val) * np.sum(
+            y_validation * np.log(poly_P_hat_val)
+            + (1 - y_validation) * np.log(1 - poly_P_hat_val)
         )
-        validation_loss_poly.append(L_val)
+        validation_loss_poly.append(poly_L_val)
 
-        if epoch == 0 or epoch % 50 == 49 or epoch == epochs - 1:
+        if poly_epoch == 0 or poly_epoch % 50 == 49 or poly_epoch == epochs - 1:
             print(
-                f"Epoch {epoch + 1:4d}/{epochs} | "
-                f"Train Loss: {L:.6f} | "
-                f"Val Loss: {L_val:.6f} | "
-                f"Train-Val: {(L - L_val):.6f}"
+                f"Epoch {poly_epoch + 1:4d}/{epochs} | "
+                f"Train Loss: {poly_L:.6f} | "
+                f"Val Loss: {poly_L_val:.6f} | "
+                f"Train-Val: {(poly_L - poly_L_val):.6f}"
             )
 
     print("=" * 80)
@@ -776,7 +786,12 @@ def _(Neuron, X_test_poly, X_train_poly, X_val_poly, epochs, learning_rate, np, 
 
 
 @app.cell(hide_code=True)
-def _(training_loss, training_loss_poly, validation_loss, validation_loss_poly):
+def _(
+    training_loss,
+    training_loss_poly,
+    validation_loss,
+    validation_loss_poly,
+):
     from plotly.subplots import make_subplots
     import plotly.graph_objects as go
 
