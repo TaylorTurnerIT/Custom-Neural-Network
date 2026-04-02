@@ -633,12 +633,13 @@ def _(cm):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Part 3b Interpretation (2-3 sentences):**
+    In 2–3 sentences, interpret the off-diagonal entries. Which type of error does your model make more often — false positives or false negatives?
 
-    *Write your answer here.*
+    We're seeing a lot of inaccuracy weighted towards gamma. We get a lot of them right, but we see three times more PG values than PH values being incorrect. As such, we're seeing an overall model bias towards gamma.
     """)
     return
 
@@ -652,12 +653,12 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     **Part 3c Synthesis:**
 
-    *Write your paragraph here.*
+    I'm seeing a very similar overall performance, though slightly worse. With this model we see ~76% accuracy that is heavily influenced by a bias towards gamma. Accuracy is clearly insufficient but we don't see any signs of overfitting due to lack of overall model capacity. The obvious solution is to adjust the threshold for gamma particles. If we require more confidence, we will see many near-misses disappear and a better overall F1 score.
     """)
     return
 
