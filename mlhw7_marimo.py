@@ -456,7 +456,8 @@ def _(MinMaxScaler, Neuron, X, epochs, learning_rate, np, train_test_split, y):
     print("=" * 80)
     print(f"Training Complete. Final Train Loss: {training_loss[-1]:.6f}")
     print("=" * 80)
-    return P_hat_val, neuron, training_loss, validation_loss
+    neuron.forward(X_test_normalized)
+    return neuron, training_loss, validation_loss, y_test
 
 
 @app.cell(hide_code=True)
@@ -553,11 +554,11 @@ def _(mo):
 
 
 @app.cell
-def _(P_hat_val, neuron):
+def _(neuron, y_test):
     from sklearn.metrics import confusion_matrix
 
     # Generate test predictions using threshold 0.5.
-    cm = confusion_matrix(y_true=(P_hat_val > 0.5), y_pred=(neuron.P_hat > 0.5))
+    cm = confusion_matrix(y_true=y_test, y_pred=(neuron.P_hat > 0.5))
 
     # Print per-class metrics
     tn, fp, fn, tp = cm.ravel()
@@ -616,7 +617,7 @@ def _(cm):
         width=600,
         height=500,
         xaxis=dict(title="Predicted Label"),
-        yaxis=dict(title="True Label"),
+        yaxis=dict(title="True Label", autorange="reversed"),
     )
 
     # Make annotations pop

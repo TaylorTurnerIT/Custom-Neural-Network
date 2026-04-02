@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__marimo__get_active_notebooks",
+      "mcp__marimo__get_lightweight_cell_map",
+      "Bash(python3:*)"
+    ]
+  }
+}
