@@ -107,9 +107,9 @@ def _(mo):
 @app.cell
 def _():
     learning_rate = 0.1
-    # epochs = 1000
+    epochs = 1000
     random_seed = 42
-    return (learning_rate,)
+    return epochs, learning_rate
 
 
 @app.cell(hide_code=True)
@@ -344,26 +344,7 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
-    # add epoch slider
-    epochs_value = mo.ui.number(step=1)
-    epochs_value
-    return (epochs_value,)
-
-
-@app.cell(hide_code=True)
-def _(
-    MinMaxScaler,
-    Neuron,
-    X,
-    epochs_value,
-    learning_rate,
-    np,
-    train_test_split,
-    y,
-):
-    epochs = epochs_value.value
-
+def _(MinMaxScaler, Neuron, X, epochs, learning_rate, np, train_test_split, y):
     # X = df[features].values                # shape (19020, 10)
     # y = df["label"].values.reshape(-1, 1)  # shape (19020, 1)
 
@@ -475,7 +456,7 @@ def _(
     print("=" * 80)
     print(f"Training Complete. Final Train Loss: {training_loss[-1]:.6f}")
     print("=" * 80)
-    return
+    return P_hat_val, neuron, training_loss, validation_loss
 
 
 @app.cell(hide_code=True)
@@ -491,20 +472,70 @@ def _(mo):
     return
 
 
-app._unparsable_cell(
-    r"""
+@app.cell(hide_code=True)
+def _(training_loss, validation_loss):
     # TODO: Plot training loss and validation loss versus epoch.
-    python import plotly.graph_objects as go # Create the figure 
-    fig = go.Figure() # Add training loss trace fig.add_trace(go.Scatter( y=training_loss, mode='lines', name='Training Loss', line=dict(color='#636EFA', width=2), hovertemplate='Epoch: %{x}<br>Loss: %{y:.6f}<extra></extra>' )) # Add validation loss trace fig.add_trace(go.Scatter( y=validation_loss, mode='lines', name='Validation Loss', line=dict(color='#EF553B', width=2), hovertemplate='Epoch: %{x}<br>Loss: %{y:.6f}<extra></extra>' )) # Update layout fig.update_layout( title=dict( text='Training vs. Validation Loss', x=0.5, font=dict(size=20) ), xaxis=dict( title='Epoch', showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)', range=[0, min(2000, len(training_loss))] if len(training_loss) > 2000 else None ), yaxis=dict( title='Binary Cross-Entropy Loss', showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)' ), hovermode='x unified', template='plotly_white', width=900, height=550, legend=dict( yanchor='top', y=0.98, xanchor='right', x=0.98 ) ) fig
-    """,
-    name="_"
-)
+    import plotly.graph_objects as go
+
+    # Create the figure
+    fig = go.Figure()
+
+    # Add training loss trace
+    fig.add_trace(
+        go.Scatter(
+            y=training_loss,
+            mode="lines",
+            name="Training Loss",
+            line=dict(color="#636EFA", width=2),
+            hovertemplate="Epoch: %{x}<br>Loss: %{y:.6f}<extra></extra>",
+        )
+    )
+
+    # Add validation loss trace
+    fig.add_trace(
+        go.Scatter(
+            y=validation_loss,
+            mode="lines",
+            name="Validation Loss",
+            line=dict(color="#EF553B", width=2),
+            hovertemplate="Epoch: %{x}<br>Loss: %{y:.6f}<extra></extra>",
+        )
+    )
+
+    # Update layout
+    fig.update_layout(
+        title=dict(text="Training vs. Validation Loss", x=0.5, font=dict(size=20)),
+        xaxis=dict(
+            title="Epoch",
+            showgrid=True,
+            gridwidth=1,
+            gridcolor="rgba(128,128,128,0.2)",
+            range=[0, min(2000, len(training_loss))]
+            if len(training_loss) > 2000
+            else None,
+        ),
+        yaxis=dict(
+            title="Binary Cross-Entropy Loss",
+            showgrid=True,
+            gridwidth=1,
+            gridcolor="rgba(128,128,128,0.2)",
+        ),
+        hovermode="x unified",
+        template="plotly_white",
+        width=700,
+        height=400,
+        legend=dict(yanchor="top", y=0.98, xanchor="right", x=0.98),
+    )
+
+    fig
+    return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    **Part 3a Interpretation (3-5 sentences):** *Write your answer here.*
+    **Part 3a Interpretation (3-5 sentences):**
+    We're seeing outstanding performance out of the model given its nature as a logistic regression engine. In our experiments, we pushed the epochs to 50,000 and it never overfit because the model does not have the capacity to overfit. By definition, we are underfit on the data. The question implies there is overfitting but by the nature of the problem it doesn't make sense that we would.
     """)
     return
 
@@ -522,15 +553,80 @@ def _(mo):
 
 
 @app.cell
-def _():
-    # TODO: Generate test predictions using threshold 0.5.
+def _(P_hat_val, neuron):
+    from sklearn.metrics import confusion_matrix
 
-    # TODO: Compute the confusion matrix.
+    # Generate test predictions using threshold 0.5.
+    cm = confusion_matrix(y_true=(P_hat_val > 0.5), y_pred=(neuron.P_hat > 0.5))
 
-    # TODO: Compute precision and recall for gamma and hadron.
+    # Print per-class metrics
+    tn, fp, fn, tp = cm.ravel()
 
-    # TODO: Display the confusion matrix.
-    pass
+    # Compute precision and recall for gamma and hadron.
+    precision_gamma = tp / (tp + fp)
+    recall_gamma = tp / (tp + fn)
+    f1_gamma = (
+        2 * precision_gamma * recall_gamma / (precision_gamma + recall_gamma)
+    )
+
+    precision_hadron = tn / (tn + fn)
+    recall_hadron = tn / (tn + fp)
+    f1_hadron = (
+        2 * precision_hadron * recall_hadron / (precision_hadron + recall_hadron)
+    )
+
+
+    print(f"\n{'=' * 50}")
+    print(f"Gamma Class (1):")
+    print(f"  Precision: {precision_gamma:.4f}")
+    print(f"  Recall:    {recall_gamma:.4f}")
+    print(f"  F1 Score:  {f1_gamma:.4f}")
+    print(f"\nHadron Class (0):")
+    print(f"  Precision: {precision_hadron:.4f}")
+    print(f"  Recall:    {recall_hadron:.4f}")
+    print(f"  F1 Score:  {f1_hadron:.4f}")
+    print(f"{'=' * 50}")
+    return (cm,)
+
+
+@app.cell
+def _(cm):
+    # Display the confusion matrix.
+    import plotly.figure_factory as ff
+
+    # Create labels for the matrix
+    labels = ["Hadron (0)", "Gamma (1)"]
+
+    # Create annotated heatmap
+    confusion_fig = ff.create_annotated_heatmap(
+        z=cm,
+        x=["Predicted Hadron", "Predicted Gamma"],
+        y=["Actual Hadron", "Actual Gamma"],
+        annotation_text=[
+            [f"{cm[0, 0]}", f"{cm[0, 1]}"],
+            [f"{cm[1, 0]}", f"{cm[1, 1]}"],
+        ],
+        colorscale="Blues",
+        showscale=True,
+    )
+
+    # Update layout
+    confusion_fig.update_layout(
+        title=dict(text="Confusion Matrix — Test Set", x=0.5, font=dict(size=18)),
+        width=600,
+        height=500,
+        xaxis=dict(title="Predicted Label"),
+        yaxis=dict(title="True Label"),
+    )
+
+    # Make annotations pop
+    for i in range(len(confusion_fig.layout.annotations)):
+        confusion_fig.layout.annotations[i].font.size = 16
+        confusion_fig.layout.annotations[i].font.color = (
+            "white" if cm.flatten()[i] > cm.max() / 2 else "black"
+        )
+
+    confusion_fig
     return
 
 
