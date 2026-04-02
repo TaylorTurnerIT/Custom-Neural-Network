@@ -107,9 +107,9 @@ def _(mo):
 @app.cell
 def _():
     learning_rate = 0.1
-    epochs = 1000
+    # epochs = 1000
     random_seed = 42
-    return (epochs,)
+    return (learning_rate,)
 
 
 @app.cell(hide_code=True)
@@ -261,7 +261,7 @@ def _(np):
                 f"Y_hat shape {Y_hat.shape} != expected ({X.shape[0]}, 1)"
             )
 
-            self.P_hat = 1 / (1 + np.exp(-Y_hat))
+            self.P_hat = 1 / (1 + np.exp(-Y_hat))  # overflow
             self.P_hat = np.clip(self.P_hat, 1e-9, 1 - 1e-9)
 
             # Assert output shape
@@ -344,8 +344,25 @@ def _(mo):
 
 
 @app.cell
-def _(MinMaxScaler, Neuron, X, epochs, np, train_test_split, y):
-    # random_seed = 42
+def _(mo):
+    # add epoch slider
+    epochs_value = mo.ui.number(step=1)
+    epochs_value
+    return (epochs_value,)
+
+
+@app.cell(hide_code=True)
+def _(
+    MinMaxScaler,
+    Neuron,
+    X,
+    epochs_value,
+    learning_rate,
+    np,
+    train_test_split,
+    y,
+):
+    epochs = epochs_value.value
 
     # X = df[features].values                # shape (19020, 10)
     # y = df["label"].values.reshape(-1, 1)  # shape (19020, 1)
@@ -397,31 +414,67 @@ def _(MinMaxScaler, Neuron, X, epochs, np, train_test_split, y):
     print("-" * 80)
 
     # Instantiate your Neuron.
-    FEATURE_COUNT = 10
+    FEATURE_COUNT = X_train_normalized.shape[1]
     neuron = Neuron(n_features=FEATURE_COUNT)
 
     # Create lists to store training and validation loss.
-    training_loss: float = []
-    validation_loss: float = []
+    training_loss = []
+    validation_loss = []
 
     # Write the epoch loop.
+    print("=" * 80)
+    print("Starting Training")
+    print(
+        f"Epochs: {epochs} | Learning Rate: {learning_rate} | Features: {FEATURE_COUNT}"
+    )
+    print("=" * 80)
+
     for epoch in range(epochs):
-        #   - Call forward() on the training data
-        neuron.forward(X_train)
-        #   - Clip predictions before computing BCE.
+        # - Call forward() on the training data
+        neuron.forward(X_train_normalized)
+
+        # - Clip predictions before computing BCE.
         neuron.P_hat = np.clip(neuron.P_hat, 1e-9, 1 - 1e-9)
-        #   - Compute Binary Cross-Entropy loss in the training loop.
-        L = -(1 / X_train_normalized.shape[1]) * np.sum(
+
+        # - Compute Binary Cross-Entropy loss in the training loop
+        N = X_train_normalized.shape[0]
+        L = -(1 / N) * np.sum(
             y_train * np.log(neuron.P_hat)
             + (1 - y_train) * np.log(1 - neuron.P_hat)
-        )  # scalar
-        #   - Compute dL/dP_hat in the training loop.
-        dL_dP_hat = -(y_train / neuron.P_hat) + (1 - y_train) / (
-            1 - neuron.P_hat
-        )  # shape: (N, 1)
-        #   - Call backward(dL_dP_hat, learning_rate).
-        #   - Forward pass on validation data to record validation loss.
-        #   - Record training loss and validation loss.
+        )
+
+        # - Compute dL/dP_hat in the training loop.
+        dL_dP_hat = -(y_train / neuron.P_hat) + (1 - y_train) / (1 - neuron.P_hat)
+
+        # - Call backward(dL_dP_hat, learning_rate).
+        neuron.backward(dL_dP_hat, learning_rate)
+
+        # - Record training loss
+        training_loss.append(L)
+
+        # - Forward pass on validation data to record validation loss.
+        neuron.forward(X_validation_normalized)
+        P_hat_val = np.clip(neuron.P_hat, 1e-9, 1 - 1e-9)
+        N_val = X_validation_normalized.shape[0]
+        L_val = -(1 / N_val) * np.sum(
+            y_validation * np.log(P_hat_val)
+            + (1 - y_validation) * np.log(1 - P_hat_val)
+        )
+        validation_loss.append(L_val)
+
+        # Print progress every 50 epochs and first/last epoch
+        if epoch == 0 or epoch % 50 == 49 or epoch == epochs - 1:
+            print(
+                f"Epoch {epoch + 1:4d}/{epochs} | "
+                f"Train Loss: {L:.6f} | "
+                f"Val Loss: {L_val:.6f} | "
+                f"Train Acc: {np.mean((neuron.P_hat > 0.5) == y_validation):.4f} | "
+                f"Train-Val: {(L - L_val):.6f}"
+            )
+
+    print("=" * 80)
+    print(f"Training Complete. Final Train Loss: {training_loss[-1]:.6f}")
+    print("=" * 80)
     return
 
 
@@ -438,11 +491,14 @@ def _(mo):
     return
 
 
-@app.cell
-def _():
+app._unparsable_cell(
+    r"""
     # TODO: Plot training loss and validation loss versus epoch.
-    pass
-    return
+    python import plotly.graph_objects as go # Create the figure 
+    fig = go.Figure() # Add training loss trace fig.add_trace(go.Scatter( y=training_loss, mode='lines', name='Training Loss', line=dict(color='#636EFA', width=2), hovertemplate='Epoch: %{x}<br>Loss: %{y:.6f}<extra></extra>' )) # Add validation loss trace fig.add_trace(go.Scatter( y=validation_loss, mode='lines', name='Validation Loss', line=dict(color='#EF553B', width=2), hovertemplate='Epoch: %{x}<br>Loss: %{y:.6f}<extra></extra>' )) # Update layout fig.update_layout( title=dict( text='Training vs. Validation Loss', x=0.5, font=dict(size=20) ), xaxis=dict( title='Epoch', showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)', range=[0, min(2000, len(training_loss))] if len(training_loss) > 2000 else None ), yaxis=dict( title='Binary Cross-Entropy Loss', showgrid=True, gridwidth=1, gridcolor='rgba(128,128,128,0.2)' ), hovermode='x unified', template='plotly_white', width=900, height=550, legend=dict( yanchor='top', y=0.98, xanchor='right', x=0.98 ) ) fig
+    """,
+    name="_"
+)
 
 
 @app.cell
