@@ -861,10 +861,10 @@ def _(
 
 @app.cell
 def _(neuron, neuron_poly, y_test):
-    from sklearn.metrics import confusion_matrix
+    from sklearn.metrics import confusion_matrix as confusion_matrix_poly
 
     # Baseline metrics — neuron.P_hat is already set to the test set from Part 2.
-    cm_b = confusion_matrix(y_true=y_test, y_pred=(neuron.P_hat > 0.5))
+    cm_b = confusion_matrix_poly(y_true=y_test, y_pred=(neuron.P_hat > 0.5))
     tn_b, fp_b, fn_b, tp_b = cm_b.ravel()
     precision_gamma_b = tp_b / (tp_b + fp_b)
     recall_gamma_b = tp_b / (tp_b + fn_b)
@@ -875,7 +875,7 @@ def _(neuron, neuron_poly, y_test):
     accuracy_b = (tp_b + tn_b) / (tp_b + tn_b + fp_b + fn_b)
 
     # Polynomial metrics — neuron_poly.P_hat is set to the test set from the training cell.
-    cm_p = confusion_matrix(y_true=y_test, y_pred=(neuron_poly.P_hat > 0.5))
+    cm_p = confusion_matrix_poly(y_true=y_test, y_pred=(neuron_poly.P_hat > 0.5))
     tn_p, fp_p, fn_p, tp_p = cm_p.ravel()
     precision_gamma_p = tp_p / (tp_p + fp_p)
     recall_gamma_p = tp_p / (tp_p + fn_p)
