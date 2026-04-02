@@ -21,7 +21,7 @@ def _(mo):
     # Machine Learning — Programming Assignment 7
     **Logistic Regression from Scratch: A Single Neuron with Modular Backpropagation**
 
-    obligatory aerial tramway
+    obligatory aerial tramway, the most lonely emoticon
     #🚡
 
     | Requirement | Details |
@@ -109,7 +109,7 @@ def _():
     learning_rate = 0.1
     epochs = 1000
     random_seed = 42
-    return
+    return (epochs,)
 
 
 @app.cell(hide_code=True)
@@ -219,7 +219,7 @@ def _(mo):
     2. When we log it, we transform the product into a summation and bring the exponents down.
     $$ \prod_{i=1}^{n} \hat{p}_i^{p_i} (1 - \hat{p}_i)^{(1 - p_i)} $$
     $$ -> $$
-    $$ \sum_{i=1}^{n} {p_i}*log(\hat{p}_i)+(1 - p_i)*log(1 - \hat{p}_i) $$
+    $$ -1/N\sum_{i=1}^{N} {p_i}*log(\hat{p}_i)+(1 - p_i)*log(1 - \hat{p}_i) $$
 
     3. Multiplicaiton can naturally cause explosive growth, we cannot allow this lest we perish in the depths of the 64-bit integer limit. The log applies a change to addition and allows us to grow significantly slower.
 
@@ -238,7 +238,7 @@ def _(mo):
 
 
 @app.cell
-def _(n_samples, np):
+def _(np):
     class Neuron:
         def __init__(self, n_features: int):
             """
@@ -246,61 +246,54 @@ def _(n_samples, np):
             W : np.ndarray, shape (1, n_features)  small random values
             b : float, initialized to 0
             """
-            self.W = np.random.uniform(-0.01, 0.01, (1, n_features))
+            self.W = np.random.uniform(-1, 1, (1, n_features))  # "small?"
             self.b: float = 0.0
 
         def forward(self, X: np.ndarray) -> np.ndarray:
-            """
-            Compute the forward pass.
-
-            Parameters
-            ----------
-            X : np.ndarray, shape (n_samples, n_features)
-
-            Returns
-            -------
-            P_hat : np.ndarray, shape (n_samples, 1)
-                Sigmoid activation — predicted probabilities.
-
-            Notes
-            -----
-            Cache X and P_hat on self for use in backward().
-            """
             self.X = X
-            self.P_hat: np.ndarray = np.zeros(n_samples, 1)
-            self.Y_hat: np.ndarray = np.zeros(n_samples, 1)
+            # Assert input shape
+            assert X.shape[1] == self.W.shape[1], (
+                f"X has {X.shape[1]} features, but W expects {self.W.shape[1]}"
+            )
 
-            self.Y_hat = X @ np.transpose(self.W) + self.b
+            Y_hat = X @ self.W.T + self.b
+            assert Y_hat.shape == (X.shape[0], 1), (
+                f"Y_hat shape {Y_hat.shape} != expected ({X.shape[0]}, 1)"
+            )
 
-            self.P_hat = 1 / (1 + np.exp(-X))
+            self.P_hat = 1 / (1 + np.exp(-Y_hat))
+            self.P_hat = np.clip(self.P_hat, 1e-9, 1 - 1e-9)
+
+            # Assert output shape
+            assert self.P_hat.shape == (X.shape[0], 1), (
+                f"P_hat shape {self.P_hat.shape} is incorrect"
+            )
             return self.P_hat
 
         def backward(self, dL_dP_hat: np.ndarray, lr: float):
-            """
-            Backpropagate the upstream gradient through this neuron.
-            Update W and b in-place.
+            # Assert incoming gradient shape
+            assert dL_dP_hat.shape == self.P_hat.shape, (
+                f"dL_dP_hat shape {dL_dP_hat.shape} doesn't match P_hat shape {self.P_hat.shape}"
+            )
 
-            Parameters
-            ----------
-            dL_dP_hat : np.ndarray, shape (n_samples, 1)
-                Gradient of the loss w.r.t. this neuron's output.
-                Computed externally in the training loop.
+            # Compute sigmoid derivative term
+            sigmoid_grad = dL_dP_hat * self.P_hat * (1 - self.P_hat)
+            assert sigmoid_grad.shape == self.P_hat.shape
 
-            lr : float
-                Learning rate.
+            # Gradient w.r.t. weights
+            dL_dW = (
+                sigmoid_grad.T @ self.X / self.X.shape[0]
+            )  # shape (1, n_features)
+            assert dL_dW.shape == self.W.shape, (
+                f"dL_dW shape {dL_dW.shape} != W shape {self.W.shape}"
+            )
 
-            Returns
-            -------
-            nothing
+            # Gradient w.r.t. bias
+            dL_db = np.mean(sigmoid_grad)  # scalar
 
-            Notes
-            -----
-            This method must not reference y or compute any loss value.
-            It receives a gradient and updates the weights — that is all.
-            """
-
-            self.W = self.W - (lr * dL_dP_hat)
-            return
+            # Update weights and bias
+            self.W = self.W - lr * dL_dW
+            self.b = self.b - lr * dL_db
 
     return (Neuron,)
 
@@ -351,47 +344,84 @@ def _(mo):
 
 
 @app.cell
-def _(MinMaxScaler, Neuron, X, train_test_split, y):
+def _(MinMaxScaler, Neuron, X, epochs, np, train_test_split, y):
     # random_seed = 42
 
     # X = df[features].values                # shape (19020, 10)
     # y = df["label"].values.reshape(-1, 1)  # shape (19020, 1)
 
 
-    # TODO: Split data into train / validation / test with 70 / 15 / 15.
-    # Step 1: Split off the training set (70% train, 30% temp)
+    # Split data into train / validation / test with 70 / 15 / 15.
 
-    train_X, temp_X = train_test_split(X, test_size=0.30, random_state=42)
+    # (70% train, 30% temp)
+    X_train, X_30percent, y_train, y_30percent = train_test_split(
+        X, y, test_size=0.30, random_state=42
+    )
 
-    # Step 2: Split the temp data in half (50% of 30% = 15% overall for each)
-    val_data, test_data = train_test_split(temp_X, test_size=0.50, random_state=42)
+    # Split the temp data in half (50% of 30% = 15% overall for each)
+    X_validation, X_test, y_validation, y_test = train_test_split(
+        X_30percent, y_30percent, test_size=0.50, random_state=42
+    )
 
+    print("-" * 80)
     print(f"Total data: {len(X)}")
-    print(f"Training set: {len(train_X)} (70%)")
-    print(f"Validation set: {len(val_data)} (15%)")
-    print(f"Test set: {len(test_data)} (15%)")
+    print(f"Training set: {len(X_train)} (70%)")
+    print(f"Validation set: {len(X_validation)} (15%)")
+    print(f"Test set: {len(X_test)} (15%)")
 
 
-    # TODO: Fit MinMaxScaler on the training data only.
+    #  Fit MinMaxScaler on the training data only.
     scaler = MinMaxScaler()
-    scaled_train_X = scaler.fit_transform(train_X)
-    print(scaled_train_X[1])
+    X_train_scaled = scaler.fit(X_train)
 
-    # TODO: Transform training, validation, and test features.
+    # Transform training, validation, and test features.
+    X_train_normalized = scaler.transform(X_train)
+    X_validation_normalized = scaler.transform(X_validation)
+    X_test_normalized = scaler.transform(X_test)
 
+    print("-" * 80)
+    print("Normalized Training")
+    print(f"Example: {X_train_normalized[1][1]}")
+    print(f"X Shape: {np.shape(X_train_normalized)}")
+    print(f"y Shape: {np.shape(y_train)}")
+    print("-" * 80)
+    print("Normalized Validation")
+    print(f"Example: {X_validation_normalized[1][1]}")
+    print(f"X Shape: {np.shape(X_validation_normalized)}")
+    print(f"y Shape: {np.shape(y_validation)}")
+    print("-" * 80)
+    print("Normalized Test")
+    print(f"Example: {X_test_normalized[1][1]}")
+    print(f"X Shape: {np.shape(X_test_normalized)}")
+    print(f"y Shape: {np.shape(y_test)}")
+    print("-" * 80)
 
-    # TODO: Instantiate your Neuron.
-    neuron = Neuron(n_features=len(y))
-    # TODO: Create lists to store training and validation loss.
+    # Instantiate your Neuron.
+    FEATURE_COUNT = 10
+    neuron = Neuron(n_features=FEATURE_COUNT)
 
-    # TODO: Write the epoch loop.
-    #   - Call forward() on the training data.
-    #   - Clip predictions before computing BCE.
-    #   - Compute BCE loss in the training loop.
-    #   - Compute dL/dP_hat in the training loop.
-    #   - Call backward(dL_dP_hat, learning_rate).
-    #   - Forward pass on validation data to record validation loss.
-    #   - Record training loss and validation loss.
+    # Create lists to store training and validation loss.
+    training_loss: float = []
+    validation_loss: float = []
+
+    # Write the epoch loop.
+    for epoch in range(epochs):
+        #   - Call forward() on the training data
+        neuron.forward(X_train)
+        #   - Clip predictions before computing BCE.
+        neuron.P_hat = np.clip(neuron.P_hat, 1e-9, 1 - 1e-9)
+        #   - Compute Binary Cross-Entropy loss in the training loop.
+        L = -(1 / X_train_normalized.shape[1]) * np.sum(
+            y_train * np.log(neuron.P_hat)
+            + (1 - y_train) * np.log(1 - neuron.P_hat)
+        )  # scalar
+        #   - Compute dL/dP_hat in the training loop.
+        dL_dP_hat = -(y_train / neuron.P_hat) + (1 - y_train) / (
+            1 - neuron.P_hat
+        )  # shape: (N, 1)
+        #   - Call backward(dL_dP_hat, learning_rate).
+        #   - Forward pass on validation data to record validation loss.
+        #   - Record training loss and validation loss.
     return
 
 
