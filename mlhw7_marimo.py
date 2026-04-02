@@ -465,6 +465,8 @@ def _(MinMaxScaler, Neuron, X, epochs, learning_rate, np, train_test_split, y):
         training_loss,
         validation_loss,
         y_test,
+        y_train,
+        y_validation,
     )
 
 
@@ -711,12 +713,174 @@ def _(MinMaxScaler, PolynomialFeatures, X_test, X_train, X_validation):
     X_train_poly = scaler_poly.fit_transform(X_train_poly)
     X_val_poly = scaler_poly.transform(X_val_poly)
     X_test_poly = scaler_poly.transform(X_test_poly)
+    return X_train_poly, X_val_poly, X_test_poly
+
+
+@app.cell
+def _(Neuron, X_test_poly, X_train_poly, X_val_poly, epochs, learning_rate, np, y_test, y_train, y_validation):
+    # Instantiate a fresh Neuron on the expanded feature set.
+    POLY_FEATURE_COUNT = X_train_poly.shape[1]
+    neuron_poly = Neuron(n_features=POLY_FEATURE_COUNT)
+
+    training_loss_poly = []
+    validation_loss_poly = []
+
+    print("=" * 80)
+    print("Starting Polynomial Feature Training")
+    print(
+        f"Epochs: {epochs} | Learning Rate: {learning_rate} | Features: {POLY_FEATURE_COUNT}"
+    )
+    print("=" * 80)
+
+    for epoch in range(epochs):
+        neuron_poly.forward(X_train_poly)
+        neuron_poly.P_hat = np.clip(neuron_poly.P_hat, 1e-9, 1 - 1e-9)
+
+        N = X_train_poly.shape[0]
+        L = -(1 / N) * np.sum(
+            y_train * np.log(neuron_poly.P_hat)
+            + (1 - y_train) * np.log(1 - neuron_poly.P_hat)
+        )
+
+        dL_dP_hat = -(y_train / neuron_poly.P_hat) + (1 - y_train) / (
+            1 - neuron_poly.P_hat
+        )
+
+        neuron_poly.backward(dL_dP_hat, learning_rate)
+        training_loss_poly.append(L)
+
+        neuron_poly.forward(X_val_poly)
+        P_hat_val = np.clip(neuron_poly.P_hat, 1e-9, 1 - 1e-9)
+        N_val = X_val_poly.shape[0]
+        L_val = -(1 / N_val) * np.sum(
+            y_validation * np.log(P_hat_val)
+            + (1 - y_validation) * np.log(1 - P_hat_val)
+        )
+        validation_loss_poly.append(L_val)
+
+        if epoch == 0 or epoch % 50 == 49 or epoch == epochs - 1:
+            print(
+                f"Epoch {epoch + 1:4d}/{epochs} | "
+                f"Train Loss: {L:.6f} | "
+                f"Val Loss: {L_val:.6f} | "
+                f"Train-Val: {(L - L_val):.6f}"
+            )
+
+    print("=" * 80)
+    print(f"Training Complete. Final Train Loss: {training_loss_poly[-1]:.6f}")
+    print("=" * 80)
+
+    # Set P_hat to test set predictions for metrics below.
+    neuron_poly.forward(X_test_poly)
+    return neuron_poly, training_loss_poly, validation_loss_poly
+
+
+@app.cell(hide_code=True)
+def _(training_loss, training_loss_poly, validation_loss, validation_loss_poly):
+    from plotly.subplots import make_subplots
+    import plotly.graph_objects as go
+
+    fig_poly = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=("Baseline (10 features)", "Polynomial (65 features)"),
+    )
+
+    fig_poly.add_trace(
+        go.Scatter(
+            y=training_loss,
+            mode="lines",
+            name="Train (baseline)",
+            line=dict(color="#636EFA", width=2),
+        ),
+        row=1,
+        col=1,
+    )
+    fig_poly.add_trace(
+        go.Scatter(
+            y=validation_loss,
+            mode="lines",
+            name="Val (baseline)",
+            line=dict(color="#EF553B", width=2),
+        ),
+        row=1,
+        col=1,
+    )
+    fig_poly.add_trace(
+        go.Scatter(
+            y=training_loss_poly,
+            mode="lines",
+            name="Train (poly)",
+            line=dict(color="#636EFA", width=2, dash="dot"),
+        ),
+        row=1,
+        col=2,
+    )
+    fig_poly.add_trace(
+        go.Scatter(
+            y=validation_loss_poly,
+            mode="lines",
+            name="Val (poly)",
+            line=dict(color="#EF553B", width=2, dash="dot"),
+        ),
+        row=1,
+        col=2,
+    )
+
+    fig_poly.update_layout(
+        title=dict(
+            text="Loss Curves: Baseline vs. Polynomial Features",
+            x=0.5,
+            font=dict(size=18),
+        ),
+        template="plotly_white",
+        width=900,
+        height=400,
+    )
+    fig_poly.update_xaxes(title_text="Epoch")
+    fig_poly.update_yaxes(title_text="Binary Cross-Entropy Loss", col=1)
+
+    fig_poly
     return
 
 
 @app.cell
-def _():
-    pass
+def _(neuron, neuron_poly, y_test):
+    from sklearn.metrics import confusion_matrix
+
+    # Baseline metrics — neuron.P_hat is already set to the test set from Part 2.
+    cm_b = confusion_matrix(y_true=y_test, y_pred=(neuron.P_hat > 0.5))
+    tn_b, fp_b, fn_b, tp_b = cm_b.ravel()
+    precision_gamma_b = tp_b / (tp_b + fp_b)
+    recall_gamma_b = tp_b / (tp_b + fn_b)
+    f1_gamma_b = 2 * precision_gamma_b * recall_gamma_b / (precision_gamma_b + recall_gamma_b)
+    precision_hadron_b = tn_b / (tn_b + fn_b)
+    recall_hadron_b = tn_b / (tn_b + fp_b)
+    f1_hadron_b = 2 * precision_hadron_b * recall_hadron_b / (precision_hadron_b + recall_hadron_b)
+    accuracy_b = (tp_b + tn_b) / (tp_b + tn_b + fp_b + fn_b)
+
+    # Polynomial metrics — neuron_poly.P_hat is set to the test set from the training cell.
+    cm_p = confusion_matrix(y_true=y_test, y_pred=(neuron_poly.P_hat > 0.5))
+    tn_p, fp_p, fn_p, tp_p = cm_p.ravel()
+    precision_gamma_p = tp_p / (tp_p + fp_p)
+    recall_gamma_p = tp_p / (tp_p + fn_p)
+    f1_gamma_p = 2 * precision_gamma_p * recall_gamma_p / (precision_gamma_p + recall_gamma_p)
+    precision_hadron_p = tn_p / (tn_p + fn_p)
+    recall_hadron_p = tn_p / (tn_p + fp_p)
+    f1_hadron_p = 2 * precision_hadron_p * recall_hadron_p / (precision_hadron_p + recall_hadron_p)
+    accuracy_p = (tp_p + tn_p) / (tp_p + tn_p + fp_p + fn_p)
+
+    print(f"\n{'=' * 65}")
+    print(f"{'Metric':<30} {'Baseline':>15} {'Polynomial':>15}")
+    print(f"{'=' * 65}")
+    print(f"{'Accuracy':<30} {accuracy_b:>15.4f} {accuracy_p:>15.4f}")
+    print(f"{'Precision (Gamma)':<30} {precision_gamma_b:>15.4f} {precision_gamma_p:>15.4f}")
+    print(f"{'Recall (Gamma)':<30} {recall_gamma_b:>15.4f} {recall_gamma_p:>15.4f}")
+    print(f"{'F1 (Gamma)':<30} {f1_gamma_b:>15.4f} {f1_gamma_p:>15.4f}")
+    print(f"{'Precision (Hadron)':<30} {precision_hadron_b:>15.4f} {precision_hadron_p:>15.4f}")
+    print(f"{'Recall (Hadron)':<30} {recall_hadron_b:>15.4f} {recall_hadron_p:>15.4f}")
+    print(f"{'F1 (Hadron)':<30} {f1_hadron_b:>15.4f} {f1_hadron_p:>15.4f}")
+    print(f"{'=' * 65}")
     return
 
 
